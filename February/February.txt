@@ -1,0 +1,139 @@
+﻿#include <iostream>
+#include <thread>
+using namespace std;
+
+void print() {
+    for (int i = 0; i < 10; ++i) {
+         cout << "Дочерний поток: строка " << i + 1 <<  endl;
+    }
+} 
+
+int main() {
+    setlocale(LC_ALL, "Ru");
+
+    thread childThread(print);
+    childThread.join();
+    for (int i = 0; i < 10; ++i) {
+         cout << "Родительский поток: строка " << i + 1 <<  endl;
+    }
+
+    return 0;
+}
+
+//Task 2
+
+﻿#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <conio.h>
+
+#define ERROR_CREATE_THREAD -11
+#define ERROR_JOIN_THREAD   -12
+
+void* helloWorld(void* args) {
+    printf("Hello from thread!\n");
+    return NULL;
+}
+
+int main() {
+    pthread_t thread;
+    int status;
+    int status_addr;
+
+    status = pthread_create(&thread, NULL, helloWorld, NULL);
+    if (status != 0) {
+        printf("main error: can't create thread, status = %d\n", status);
+        exit(ERROR_CREATE_THREAD);
+    }
+    printf("Hello from main!\n");
+
+    status = pthread_join(thread, (void**)&status_addr);
+    if (status != 0) {
+        printf("main error: can't join thread, status = %d\n", status);
+        exit(ERROR_JOIN_THREAD);
+    }
+
+    printf("joined with address %d\n", status_addr);
+    _getch();
+    return 0;
+}
+//Task 3
+
+﻿#include <iostream>
+#include <thread>
+#include <pthread.h>
+#include <vector>
+#include <string>
+using namespace std;
+
+
+void printStrings(const vector<string>& strings) {
+    for (const auto& str : strings) {
+        cout << str << endl;
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "Ru");
+
+    vector<string> strings1 = { "Поток 1: Строка 1",
+        "Поток 1: Строка 2",
+        "Поток 1: Строка 3" };
+    vector<string> strings2 = { "Поток 2: Строка 1",
+        "Поток 2: Строка 2",
+        "Поток 2: Строка 3" };
+    vector<string> strings3 = { "Поток 3: Строка 1",
+        "Поток 3: Строка 2",
+        "Поток 3: Строка 3" };
+    vector<string> strings4 = { "Поток 4: Строка 1",
+        "Поток 4: Строка 2",
+        "Поток 4: Строка 3" };
+
+    thread thread1(printStrings, strings1);
+    thread thread2(printStrings, strings2);
+    thread thread3(printStrings, strings3);
+    thread thread4(printStrings, strings4);
+
+    thread1.join();
+    thread2.join();
+    thread3.join();
+    thread4.join();
+
+    return 0;
+}
+//Task 4
+﻿#include <iostream>
+#include <thread>
+#include <pthread.h>
+#include <chrono>
+using namespace std;
+
+void printExitMessage(void* arg) {
+	cout << "Поток завершается." << endl;
+}
+
+void* printStrings(void* parm) {
+	pthread_cleanup_push(printExitMessage, nullptr);
+	for (int i = 1; i < 7; i++) {
+		pthread_testcancel();
+		cout << "Строка " << i << endl;
+		
+		this_thread::sleep_for(chrono::milliseconds(300));
+	}
+	pthread_cleanup_pop(1);
+	return NULL;
+}
+
+int main() {
+	setlocale(LC_ALL, "Ru");
+
+	int rc = 0;
+	pthread_t thread1;
+	rc = pthread_create(&thread1, NULL, printStrings, NULL);
+	this_thread::sleep_for(chrono::milliseconds(2000));
+	rc = pthread_cancel(thread1);
+
+	pthread_exit(NULL);
+
+	return 0;
+}
